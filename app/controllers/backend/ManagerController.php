@@ -9,33 +9,43 @@ use \Exception;
 use \User;
 use \Auth;
 use \Validator;
+use \Lang;
 
 class ManagerController extends BaseController {
 
+	public function __construct(){
+		$this->validatorNiceNames = array(
+				'code' =>Lang::get("resource.user.code"),
+				'password' =>Lang::get("resource.g.password"),
+		);
+	}
+	
 	/**
 	 * Setup the layout used by the controller.
 	 *
 	 * @return void
 	 */
 	
-	public function logon(){
-		
+	public function login(){
 		$rules = array(
-			'email'       => 'required',/*|email*/
+			'code'       => 'required',/*|email*/
 			'password'    => 'required',/*|min:6*/
 			'remember_me' => 'boolean',
-		);
-		$validator = Validator::make(Input::all(), $rules);
+		);		
+		
+		$validator = Validator::make(Input::all(), $rules);		
+		$validator->setAttributeNames($this->validatorNiceNames);
+		
 		if ($validator->passes())
 		{
 			if (Auth::attempt(array(
-				'code'    => Input::get('email'),
+				'code'    => Input::get('code'),
 				'password' => Input::get('password'),
 				'block'    => 0), (boolean) Input::get('remember_me')))
 			{
 				return Redirect::to('manager');//Redirect::intended登录前页面
 			} else {
-				return Redirect::to('mlogin')->withInput()->with('message', '用户名密码不正确');
+				return Redirect::to('mlogin')->withInput()->with('message',Lang::get('resource.user.login.error'));
 			}
 		} else {
 			return Redirect::to('mlogin')->withInput()->withErrors($validator);
